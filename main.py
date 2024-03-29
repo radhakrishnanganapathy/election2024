@@ -4,7 +4,7 @@ import datetime
 from flask import Flask,Response
 import psycopg2
 from psycopg2 import IntegrityError
-
+import pandas as pd
 # Function to get user's IP address
 conn = psycopg2.connect(
      host='dpg-cmmvudocmk4c73e4qfh0-a.oregon-postgres.render.com',
@@ -66,6 +66,27 @@ def get_user_ip():
         st.error(f"Error fetching IP address: {e}")
         return None
     
+def filter(select_constituencies,select_status,select_party):
+     query = "select * from election where "
+     filters = []
+     if select_constituencies:
+          filters.append(f"constituency='{select_constituencies}'")
+     if select_status:
+          filters.append(f"status='{select_status}'")
+     if select_party:
+          filters.append(f"party='{select_party}'")
+     if filters:
+          query += " and ".join(filters)
+     if filters:
+          cur.execute(query)
+          result = cur.fetchall()
+          column_names = [desc[0] for desc in cur.description]
+          df = pd.DataFrame(result, columns = column_names)
+          st.write(df)
+     else:
+          st.warning("Please select AT least one filter")
+     
+    
 st.sidebar.title("Opinion Poll-2024 TN")
 option = ['NDA','I.N.D.I.A','Namtamizhar','ADMK','Independent','NOTA','Unable to Vote']
 select_option = st.sidebar.selectbox("My vote for", option)
@@ -80,10 +101,29 @@ constituencies_query = "select constituency from election group by constituency"
 cur.execute(constituencies_query)
 constituencies_fetch = cur.fetchall()
 constituencies = [status[0] for status in constituencies_fetch]
-select_status = st.selectbox('constituencies',constituencies)
 
-status_option = ['Withdrawn','Rejected','Accepted','Applied']
-select_status = st.selectbox('status',status_option)
+
+status_option = ["",'Withdrawn','Rejected','Accepted','Applied']
+
+
+party_query = "select party from election group by party"
+cur.execute(party_query)
+party_fetch = cur.fetchall()
+parties = [party[0] for party in party_fetch]
+
+col1,col2,col3 = st.columns(3)
+with col1:
+     select_constituencies = st.selectbox('constituencies',constituencies)
+with col2:
+     select_status = st.selectbox('status',status_option)
+with col3:
+     select_party = st.selectbox('party',parties)
+submit = st.button("filter")
+if submit:
+     filter(select_constituencies,select_status,select_party)
+
+
+
 
 if __name__ == "__main__":
     main(select_option,sumbit_button)
