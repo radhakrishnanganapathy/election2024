@@ -136,8 +136,8 @@ def potly():
 st.sidebar.title("Opinion Poll-2024 TN")
 option = ['NDA','I.N.D.I.A','Namtamizhar','ADMK','Independent','NOTA','Unable to Vote']
 select_option = st.sidebar.selectbox("My vote for", option)
-st.sidebar.button(f'Total Votes : {vote_count()}')
-sumbit_button = st.sidebar.button('submit yor Vote')
+# st.sidebar.button(f'Total Votes : {vote_count()}')
+sumbit_button = st.sidebar.button(f'Total Votes : {vote_count()}')
 
 st.header("General election 2024 - TamilNadu")
 st.write('Try to 100% Vote')
