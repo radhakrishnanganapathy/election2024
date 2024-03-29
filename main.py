@@ -6,6 +6,10 @@ import psycopg2
 from psycopg2 import IntegrityError
 import pandas as pd
 import socket
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+
+
 
 # Function to get user's IP address
 conn = psycopg2.connect(
@@ -105,7 +109,29 @@ def filter(select_constituencies,select_status,select_party):
           st.write(df)
      else:
           st.warning("Please select AT least one filter")
-     
+
+def potly():
+     count ='''select count(case when status='Withdrawn' then 1 end) as Withdrawn,
+     count(case when status='Rejected' then 1 end) as Rejected,
+     count(case when status='Accepted' then 1 end) Accepted,
+     count(case when status='Applied' then 1 end) as Applied from election
+     '''
+     cur.execute(count)
+     result = cur.fetchall()
+     withdrawn, rejected, accepted, applied = result[0]
+     categories = ['Withdrawn', 'Rejected', 'Accepted', 'Applied']
+     counts = [withdrawn, rejected, accepted, applied]
+     color = ['red', 'blue', 'green', 'orange']
+     fig = go.Figure([go.Bar(x=categories, y=counts, marker_color=color)])
+     st.plotly_chart(fig)
+     # st.bar_chart(dict(zip(categories, counts, color=['red', 'blue', 'green', 'orange'])))
+     # plt.bar(categories, counts, color=['red', 'blue', 'green', 'orange'])
+     # st.plotly_chart(fig)
+     # plt.xlabel('Status')
+     # plt.ylabel('Count')
+     # plt.title('Election Application Status')
+     # plt.show()
+
     
 st.sidebar.title("Opinion Poll-2024 TN")
 option = ['NDA','I.N.D.I.A','Namtamizhar','ADMK','Independent','NOTA','Unable to Vote']
@@ -145,7 +171,7 @@ if submit:
 
 
 
-if __name__ == "__main__":
-    main(select_option,sumbit_button)
-    conn.close()
-    cur.close()
+potly()
+main(select_option,sumbit_button)
+conn.close()
+cur.close()
