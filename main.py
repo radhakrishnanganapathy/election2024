@@ -5,6 +5,8 @@ from flask import Flask,Response
 import psycopg2
 from psycopg2 import IntegrityError
 import pandas as pd
+import socket
+
 # Function to get user's IP address
 conn = psycopg2.connect(
      host='dpg-cmmvudocmk4c73e4qfh0-a.oregon-postgres.render.com',
@@ -29,7 +31,7 @@ def has_voted():
 #     return 'voted' in st.request.cookies
 
 def main(select_option,sumbit_button):
-     ip = get_user_ip()
+     ip = get_ip_address()
      party = select_option
      if sumbit_button:
           try:
@@ -37,7 +39,7 @@ def main(select_option,sumbit_button):
                data = ip,party
                cur.execute(insert_query, data)
                conn.commit()
-               st.success(f'Thanks for voting')
+               st.sidebar.success(f'Thanks for voting')
                vote_count()
           # set_cookie()
           except IntegrityError as ie:   
@@ -65,6 +67,24 @@ def get_user_ip():
     except Exception as e:
         st.error(f"Error fetching IP address: {e}")
         return None
+    
+def get_ip_address():
+    try:
+        # Create a socket object
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        
+        # Connect to a remote server (doesn't matter which)
+        s.connect(("8.8.8.8", 80))
+        
+        # Get the local IP address associated with the socket
+        ip_address = s.getsockname()[0]
+        
+        # Close the socket
+        s.close()
+        
+        return ip_address
+    except socket.error:
+        return "Unable to retrieve IP address"
     
 def filter(select_constituencies,select_status,select_party):
      query = "select * from election where "
