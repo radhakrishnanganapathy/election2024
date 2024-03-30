@@ -116,8 +116,9 @@ def filter(select_constituencies,select_status,select_party):
 def potly():
      count ='''select count(case when status='Withdrawn' then 1 end) as Withdrawn,
      count(case when status='Rejected' then 1 end) as Rejected,
-     count(case when status='Accepted' then 1 end) Accepted,
-     count(case when status='Applied' then 1 end) as Applied from election
+     count(case when status='Applied' then 1 end) as Applied,
+     count(case when status='Accepted' then 1 end) as Accepted
+      from election
      '''
      cur.execute(count)
      result = cur.fetchall()
@@ -138,7 +139,9 @@ def potly():
 def candidate_data():
      query = '''select election.*,map.latitude,map.longitude from election
       inner join 
-      map on election.constituency = map.constituency'''
+      map on election.constituency = map.constituency 
+      where election.status = 'Accepted'
+      '''
      cur.execute(query)
      data = cur.fetchall()
      return data
@@ -174,6 +177,9 @@ constituencies_query = "select constituency from election group by constituency"
 cur.execute(constituencies_query)
 constituencies_fetch = cur.fetchall()
 constituencies = [status[0] for status in constituencies_fetch]
+constituencies.append("")
+sort_constituencies = sorted(constituencies)
+
 
 
 status_option = ["",'Withdrawn','Rejected','Accepted','Applied']
@@ -183,14 +189,17 @@ party_query = "select party from election group by party"
 cur.execute(party_query)
 party_fetch = cur.fetchall()
 parties = [party[0] for party in party_fetch]
+parties.append("")
+sort_parties = sorted(parties)
+
 
 col1,col2,col3 = st.columns(3)
 with col1:
-     select_constituencies = st.selectbox('constituencies',constituencies)
+     select_constituencies = st.selectbox('constituencies',sort_constituencies)
 with col2:
      select_status = st.selectbox('status',status_option)
 with col3:
-     select_party = st.selectbox('party',parties)
+     select_party = st.selectbox('party',sort_parties)
 submit = st.button("filter")
 if submit:
      filter(select_constituencies,select_status,select_party)
