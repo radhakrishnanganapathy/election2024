@@ -5,3 +5,7 @@ flask
 psycopg2-binary
 matplotlib
 plotly
+folium
+streamlit_folium
+
+# pip install folium --index-url https://pypi.python.org/simple/

@@ -8,6 +8,8 @@ import pandas as pd
 import socket
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import folium
+from streamlit_folium import folium_static
 
 
 
@@ -34,7 +36,7 @@ def has_voted():
 #     return st.session_state.get('voted', False)
 #     return 'voted' in st.request.cookies
 
-def main(select_option,sumbit_button):
+def main_vote(select_option,sumbit_button):
      ip = get_ip_address()
      party = select_option
      if sumbit_button:
@@ -45,6 +47,7 @@ def main(select_option,sumbit_button):
                conn.commit()
                st.sidebar.success(f'Thanks for voting')
                vote_count()
+               
           # set_cookie()
           except IntegrityError as ie:   
                st.sidebar.warning("Sorry, you have already voted. you can vote once." )
@@ -132,16 +135,40 @@ def potly():
      # plt.title('Election Application Status')
      # plt.show()
 
+def candidate_data():
+     query = '''select election.*,map.latitude,map.longitude from election
+      inner join 
+      map on election.constituency = map.constituency'''
+     cur.execute(query)
+     data = cur.fetchall()
+     return data
+
+def map_candidate():
+     st.title("Election Candidate Map")
+     candidateData = candidate_data()
+     if candidateData:
+          m = folium.Map(location=[candidateData[0][8],candidateData[0][9]],zoom_start=10)
+
+          for candidate in candidateData:
+               pop_message = f"name:{candidate[2]}<br>party:{candidate[3]}"
+               folium.Marker([candidate[8],candidate[9]],popup=pop_message[2]).add_to(m)
+          folium_static(m)
+     else:
+          st.write("No data ")
     
+
+st.header("General election 2024 - TamilNadu")
+st.write('Try to 100% Vote')
+st.write("Don't waste your vote on NOTA ")
+potly()
+
 st.sidebar.title("Opinion Poll-2024 TN")
 option = ['NDA','I.N.D.I.A','Namtamizhar','ADMK','Independent','NOTA','Unable to Vote']
 select_option = st.sidebar.selectbox("My vote for", option)
 # st.sidebar.button(f'Total Votes : {vote_count()}')
 sumbit_button = st.sidebar.button(f'Total Votes : {vote_count()}')
 
-st.header("General election 2024 - TamilNadu")
-st.write('Try to 100% Vote')
-st.write("Don't waste your vote on NOTA ")
+
 
 constituencies_query = "select constituency from election group by constituency"
 cur.execute(constituencies_query)
@@ -171,7 +198,8 @@ if submit:
 
 
 
-potly()
-main(select_option,sumbit_button)
+# potly()
+main_vote(select_option,sumbit_button)
+map_candidate()
 conn.close()
 cur.close()
